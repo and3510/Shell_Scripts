@@ -1,18 +1,28 @@
 #!/bin/bash
 
-echo "Encontre GIT!"
-read -p "Digite o caminho: " caminho
+# Caminho inicial para buscar os repositórios
+BASE_DIR=${1:-.}  # Use o diretório atual se nenhum argumento for passado
 
-var=$(date +%d-%m-%Y)
+# Função para verificar alterações em um repositório Git
+check_git_status() {
+    local repo_dir=$1
+    cd "$repo_dir" || return
 
-registro=$(find $caminho -name .git | wc -l )
+    # Verifica se há alterações pendentes
+    if git diff --quiet && git diff --cached --quiet; then
+        echo "✔️  Sem alterações pendentes em: $repo_dir"
+    else
+        echo "⚠️  Alterações pendentes em: $repo_dir"
+    fi
 
-echo "O numero de gits nesse caminho $caminho na data $var foi $registro " >> /home/anderson/.config/Code/check_gits.log
+    cd - > /dev/null || exit
+}
 
-find $caminho -name .git
-
-clear
-echo "O numero de gits nesse caminho $caminho na data $var foi $registro "
+# Buscar diretórios contendo .git e verificar o status
+find "$BASE_DIR" -type d -name ".git" | while read -r git_dir; do
+    repo_dir=$(dirname "$git_dir")
+    check_git_status "$repo_dir"
+done
 
 
 
